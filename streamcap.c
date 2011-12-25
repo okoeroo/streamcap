@@ -33,9 +33,9 @@ static int progress_cb(void *p,
   struct myprogress *myp = (struct myprogress *)p;
   CURL *curl = myp->curl;
   double curtime = 0;
- 
+
   curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
- 
+
   /* under certain circumstances it may be desirable for certain functionality
      to only run every N seconds, in order to do this the transaction time can
      be used */ 
@@ -43,10 +43,10 @@ static int progress_cb(void *p,
     myp->lastruntime = curtime;
     fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
   }
- 
+
   fprintf(stderr, "UP: %g of %g  DOWN: %g of %g\r\n",
           ulnow, ultotal, dlnow, dltotal);
- 
+
   if(dlnow > STOP_DOWNLOAD_AFTER_THIS_MANY_BYTES)
     return 1;
   return 0;
@@ -57,6 +57,7 @@ void get_page(const char* url, const char* name, const char* extention, const ch
 {
     CURL* easyhandle = curl_easy_init();
     char * file_name = NULL;
+    struct myprogress prog;
 
     file_name = malloc(PATH_MAX);
     sprintf (file_name, "%s.%s", name, extention);
@@ -68,6 +69,7 @@ void get_page(const char* url, const char* name, const char* extention, const ch
     /* curl_easy_setopt(easyhandle, CURLOPT_USERAGENT, "curly"); */
     curl_easy_setopt(easyhandle, CURLOPT_PROGRESSFUNCTION, progress_cb);
     curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);
+    curl_easy_setopt(easyhandle, CURLOPT_PROGRESSDATA, &prog);
 
     curl_easy_setopt(easyhandle, CURLOPT_FOLLOWLOCATION, 1);
     curl_easy_setopt(easyhandle, CURLOPT_AUTOREFERER, 1);
@@ -120,9 +122,10 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!url)
-        fprintf(stderr, "%s: Error: No URL supplied\n");
+    if (!url) {
+        fprintf(stderr, "%s: Error: No URL supplied\n", argv[0]);
         return 1;
+    }
 
 
     /* signal(SIGHUP, siginthandler); */

@@ -8,11 +8,11 @@ function streamcapture() {
     WATERMARK="$4"
 
     while [ true ]; do
-        streamcap -url ${URL} -name ${NAME} -extention ${EXT} -highwatermark ${WATERMARK}
+        ./streamcap -url ${URL} -name ${NAME} -extention ${EXT} -highwatermark ${WATERMARK}
     done
 }
 
-streamcapture "http://194.171.96.102:8000/room2" "room1" "ogv" "100" &
-streamcapture "http://194.171.96.102:8000/room2" "room2" "ogv" "100" &
+#streamcapture "http://194.171.96.102:8000/room2" "room1" "ogv" "100" &
+streamcapture "http://194.171.96.102:8000/room2" "room2" "ogv" "100"
 
 
