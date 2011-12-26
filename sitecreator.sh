@@ -61,5 +61,5 @@ build_dumps
 build_body
 build_page
 
-
-echo $PAGE
+# Write it
+echo $PAGE > ${HTML_ROOT}/index.html
