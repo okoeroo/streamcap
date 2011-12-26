@@ -4,8 +4,9 @@ TITLE="28c3 stream capture dumper index"
 HEAD_PAGE="<html><head><title>${TITLE}</title></head>"
 TAIL_PAGE="</html>"
 
-DUMP_DIR="/tmp/dump"
-HTML_DUMP_ROOT="dump"
+HTML_ROOT="/media/ccc/www/html"
+REL_VIDEO_DIR="video"
+ABS_VIDEO_DIR="${HTML_ROOT}/${REL_VIDEO_DIR}"
 
 BODY=
 PAGE=
@@ -20,11 +21,11 @@ function build_dumps() {
     BODY_DUMP_BOTTOM="</table>"
 
 
-    cd "${DUMP_DIR}"
+    cd "${ABS_VIDEO_DIR}"
     BODY_DUMP_ROWS=$(find . -name \*\.ogv -type file | while read OGV_FILE; do
         BODY_DUMP_ROW="<tr>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<td>"
-        BODY_DUMP_ROW="${BODY_DUMP_ROW}<a href=\"${HTML_DUMP_ROOT}/$OGV_FILE\">$OGV_FILE</a>"
+        BODY_DUMP_ROW="${BODY_DUMP_ROW}<a href=\"${REL_VIDEO_DIR}/$OGV_FILE\">$OGV_FILE</a>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</td>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</tr>"
 
