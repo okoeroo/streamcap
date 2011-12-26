@@ -89,6 +89,15 @@ void get_page(const char* url, const char* name, const char* extention, const ch
 }
 
 
+void usage(void) {
+    printf("streamcap\n" \
+           "              -url <url>\n" \
+           "             -name <name>\n" \
+           "        -extention <ext>\n" \
+           "    -highwatermark <bytes>\n"
+           );
+}
+
 int main(int argc, char *argv[])
 {
     int i = 0;
@@ -132,6 +141,7 @@ int main(int argc, char *argv[])
 
     if (!url) {
         fprintf(stderr, "%s: Error: No URL supplied\n", argv[0]);
+        usage();
         return 1;
     }
 
