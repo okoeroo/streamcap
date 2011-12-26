@@ -22,6 +22,8 @@
  
 struct myprogress {
   double lastruntime;
+  time_t last_update;
+  time_t first_time;
   CURL *curl;
 };
  
@@ -34,14 +36,20 @@ static int progress_cb(void *p,
   CURL *curl = myp->curl;
   double curtime = 0;
 
+  if (myp->first_time == 0){
+      myp->first_time = time(NULL);
+  }
+
+  myp->last_update = time(NULL);
+
   curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
 
   /* under certain circumstances it may be desirable for certain functionality
      to only run every N seconds, in order to do this the transaction time can
      be used */ 
   if((curtime - myp->lastruntime) >= MINIMAL_PROGRESS_FUNCTIONALITY_INTERVAL) {
-    myp->lastruntime = curtime;
-    fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
+      myp->lastruntime = curtime;
+      fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
   }
 
   fprintf(stderr, "UP: %g of %g  DOWN: %g of %g\r\n",
