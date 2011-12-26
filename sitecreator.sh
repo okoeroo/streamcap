@@ -21,21 +21,17 @@ function build_dumps() {
 
 
     cd "${DUMP_DIR}"
-    find . -name \*\.ogv -type file | while read OGV_FILE; do
+    BODY_DUMP_ROWS=$(find . -name \*\.ogv -type file | while read OGV_FILE; do
         BODY_DUMP_ROW="<tr>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<td>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<a href=\"${HTML_DUMP_ROOT}/$OGV_FILE\">$OGV_FILE</a>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</td>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</tr>"
 
-        #Add to other rows
-        BODY_DUMP_ROWS="${BODY_DUMP_ROWS}${BODY_DUMP_ROW}"
-        echo $BODY_DUMP_ROWS
-    done
-    echo $BODY_DUMP_ROWS
+        echo "${BODY_DUMP_ROW}"
+    done)
 
     BODY_DUMP=${BODY_DUMP_TOP}${BODY_DUMP_ROWS}${BODY_DUMP_BOTTOM}
-
 }
 
 function build_body() {
