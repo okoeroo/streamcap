@@ -22,7 +22,7 @@ function build_dumps() {
 
 
     cd "${ABS_VIDEO_DIR}"
-    BODY_DUMP_ROWS=$(find . -name \*\.ogv -type file | while read OGV_FILE; do
+    BODY_DUMP_ROWS=$(find . -name \*\.ogv -type f | while read OGV_FILE; do
         BODY_DUMP_ROW="<tr>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<td>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<a href=\"${REL_VIDEO_DIR}/$OGV_FILE\">$OGV_FILE</a>"
@@ -41,7 +41,8 @@ function build_body() {
     BODY_TOP="<center><h1>28c3 stream capture dumper</h1></center><br>"
     BODY_TOP="${BODY_TOP}<center>This page is NOT an official mirror</center><br>"
     BODY_TOP="${BODY_TOP}<center>Do NOT expect any quality at all, it's a best effort thingy.</center><br>"
-    BODY_TOP="${BODY_TOP}<center>If you have a comment you can find me on Twitter: <a href=\"https://twitter.com/#!/okoeroo\">@okoeroo</a><br>"
+
+    BODY_TAIL="<br><center>Last update: `date`.<br>For comments, tweet me up: <a href=\"https://twitter.com/#!/okoeroo\">@okoeroo</a></center>"
 
     BODY_CONTENT=${BODY_TOP}${BODY_DUMP}${BODY_TAIL}
 
