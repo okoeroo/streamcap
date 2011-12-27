@@ -28,10 +28,11 @@ struct myprogress {
     double     lastruntime;
     time_t     last_update;
     time_t     first_time;
-    char *     filename;
     uint64_t   highwatermark;
     CURL *curl;
 };
+short highwatermark_reached = 1; /* Init to watermark reached for initial go */
+char * filename = NULL;
 
 
 /* Must be free'd */
@@ -77,10 +78,10 @@ static int progress_cb(void *p,
     struct stat s;
 
     /* Detect waterlevel on file size */
-    stat(myp -> filename, &s);
-    printf("File size is: %llu\n", s.st_size);
+    stat(filename, &s);
 
     if (s.st_size > myp->highwatermark) {
+        highwatermark_reached = 1;
         return 1;
     }
 
@@ -100,7 +101,7 @@ static int progress_cb(void *p,
         fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
     }
 
-    fprintf(stderr, "UP: %g of %g  DOWN: %g of %g\r\n", ulnow, ultotal, dlnow, dltotal);
+    fprintf(stderr, "File size is: %20llu - UP: %g of %g  DOWN: %g of %g\r\n", s.st_size, ulnow, ultotal, dlnow, dltotal);
 
     /*
     if(dlnow > STOP_DOWNLOAD_AFTER_THIS_MANY_BYTES)
@@ -113,26 +114,29 @@ static int progress_cb(void *p,
 void get_page(const char* url, const char* name, const char* extention, const char* highwatermark)
 {
     CURL* easyhandle = curl_easy_init();
-    char * file_name = NULL;
     struct myprogress prog;
     char * tmp_parse = NULL;
     char * datetime_code = get_time_string();
 
 
-    file_name = malloc(PATH_MAX);
-    sprintf (file_name, "%s_%s.%s", datetime_code, name, extention);
-    free(datetime_code);
+    if (highwatermark_reached) {
+        highwatermark_reached = 0;
+
+        fprintf (stderr, "(Re)starting\n");
+
+        sprintf (filename, "%s_%s.%s", datetime_code, name, extention);
+        free(datetime_code);
+    } else {
+        fprintf (stderr, "Continueing with file: %s\n", filename);
+    }
 
     errno = 0;
-    FILE* file = fopen(file_name, "a");
+    FILE* file = fopen(filename, "a");
     if (!file) {
         fprintf(stderr, "StreamCap: Error: Couldn't open file: %s\n", strerror(errno));
         exit(1);
     }
 
-    printf ("(Re)starting\n");
-
-    prog.filename = file_name;
     if (highwatermark) {
         prog.highwatermark = strtoll(highwatermark, &tmp_parse, 10);
         if (tmp_parse && strlen(tmp_parse) > 0) {
@@ -171,8 +175,6 @@ void get_page(const char* url, const char* name, const char* extention, const ch
 
     curl_easy_cleanup(easyhandle);
 
-    free(file_name);
-
     return;
 }
 
@@ -193,6 +195,7 @@ int main(int argc, char *argv[])
     char * name             = NULL;
     char * extention        = NULL;
     char * highwatermark    = NULL;
+
 
     for (i = 1; i < argc; i++)
     {
@@ -236,9 +239,11 @@ int main(int argc, char *argv[])
 
     /* signal(SIGHUP, siginthandler); */
 
+    filename = malloc(PATH_MAX);
     while (1) {
         get_page(url, name, extention, highwatermark);
     }
+    free(filename);
 
     return 0;
 }
