@@ -38,7 +38,8 @@ function build_dumps() {
         echo "${BODY_DUMP_ROW}"
     done)
 
-    BODY_DUMP="${BODY_DUMP_TOP}<center>${BODY_DUMP_ROWS}</center>${BODY_DUMP_BOTTOM}"
+    BODY_DUMP="${BODY_DUMP_TOP}${BODY_DUMP_ROWS}${BODY_DUMP_BOTTOM}"
+    BODY_DUMP="<center>${BODY_DUMP}</center>"
 }
 
 function build_body() {

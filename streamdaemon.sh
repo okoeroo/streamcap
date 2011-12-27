@@ -27,13 +27,13 @@ cd "${ABS_VIDEO_DIR}"
 #streamcapture "http://194.171.96.102:8000/room2" "room1" "ogv" "100" &
 
 # saal 1
-streamcapture "http://saal1.theora.28c3.fem-net.de" "saal1" "ogv" "200" &
+streamcapture "http://wmv.28c3.fem-net.de/saal1" "saal1" "asf" "400M" &
 
 # saal 2
-streamcapture "http://saal2.theora.28c3.fem-net.de" "saal2" "ogv" "200" &
+streamcapture "http://wmv.28c3.fem-net.de/saal2" "saal2" "asf" "400M" &
 
 # saal 3
-streamcapture "http://saal3.theora.28c3.fem-net.de" "saal3" "ogv" "200"
+streamcapture "http://wmv.28c3.fem-net.de/saal3" "saal3" "asf" "400M"
 
 
 
