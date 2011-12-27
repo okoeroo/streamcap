@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
+#include <errno.h>
+#include <inttypes.h>
+#include <sys/stat.h>
+#include <time.h>
 
 
 /*
@@ -19,45 +23,90 @@
 
 #define STOP_DOWNLOAD_AFTER_THIS_MANY_BYTES         6000
 #define MINIMAL_PROGRESS_FUNCTIONALITY_INTERVAL     3
- 
+
 struct myprogress {
-  double lastruntime;
-  time_t last_update;
-  time_t first_time;
-  CURL *curl;
+    double     lastruntime;
+    time_t     last_update;
+    time_t     first_time;
+    char *     filename;
+    uint64_t   highwatermark;
+    CURL *curl;
 };
- 
+
+
+/* Must be free'd */
+char * get_time_string(void)
+{
+    char      * datetime;
+    time_t      mclock;
+    struct tm * tmp;
+
+    time(&mclock);
+    /* Log in GMT, no exceptions */
+    /* tmp = gmtime(&mclock); */
+    tmp = localtime(&mclock);
+    if (!tmp) {
+        return NULL;
+    }
+
+
+    /* This string will always return 19 characters and \0 */
+    /*
+    datetime = malloc(sizeof(char) * 21);
+    snprintf(datetime, 21, "%04d-%02d-%02d.%02d:%02d:%02dZ",
+                       tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
+                       tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+    */
+
+    datetime = malloc(sizeof(char) * 16);
+    snprintf(datetime, 16, "%04d%02d%02d.%02d%02d%02d",
+                       tmp->tm_year + 1900, tmp->tm_mon + 1, tmp->tm_mday,
+                       tmp->tm_hour, tmp->tm_min, tmp->tm_sec);
+
+    return datetime;
+}
+
 
 static int progress_cb(void *p,
                        double dltotal, double dlnow,
                        double ultotal, double ulnow)
 {
-  struct myprogress *myp = (struct myprogress *)p;
-  CURL *curl = myp->curl;
-  double curtime = 0;
+    struct myprogress *myp = (struct myprogress *)p;
+    CURL *curl = myp->curl;
+    double curtime = 0;
+    struct stat s;
 
-  if (myp->first_time == 0){
-      myp->first_time = time(NULL);
-  }
+    /* Detect waterlevel on file size */
+    stat(myp -> filename, &s);
+    printf("File size is: %llu\n", s.st_size);
 
-  myp->last_update = time(NULL);
+    if (s.st_size > myp->highwatermark) {
+        return 1;
+    }
 
-  curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
+    if (myp->first_time == 0){
+        myp->first_time = time(NULL);
+    }
 
-  /* under certain circumstances it may be desirable for certain functionality
+    myp->last_update = time(NULL);
+
+    curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &curtime);
+
+    /* under certain circumstances it may be desirable for certain functionality
      to only run every N seconds, in order to do this the transaction time can
      be used */ 
-  if((curtime - myp->lastruntime) >= MINIMAL_PROGRESS_FUNCTIONALITY_INTERVAL) {
-      myp->lastruntime = curtime;
-      fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
-  }
+    if((curtime - myp->lastruntime) >= MINIMAL_PROGRESS_FUNCTIONALITY_INTERVAL) {
+        myp->lastruntime = curtime;
+        fprintf(stderr, "TOTAL TIME: %f \r\n", curtime);
+    }
 
-  fprintf(stderr, "UP: %g of %g  DOWN: %g of %g\r\n",
-          ulnow, ultotal, dlnow, dltotal);
+    fprintf(stderr, "UP: %g of %g  DOWN: %g of %g\r\n", ulnow, ultotal, dlnow, dltotal);
 
-  if(dlnow > STOP_DOWNLOAD_AFTER_THIS_MANY_BYTES)
-    return 1;
-  return 0;
+    /*
+    if(dlnow > STOP_DOWNLOAD_AFTER_THIS_MANY_BYTES)
+        return 1;
+    */
+    return 0;
 }
 
 
@@ -66,11 +115,46 @@ void get_page(const char* url, const char* name, const char* extention, const ch
     CURL* easyhandle = curl_easy_init();
     char * file_name = NULL;
     struct myprogress prog;
+    char * tmp_parse = NULL;
+    char * datetime_code = get_time_string();
+
 
     file_name = malloc(PATH_MAX);
-    sprintf (file_name, "%s.%s", name, extention);
+    sprintf (file_name, "%s_%s.%s", datetime_code, name, extention);
+    free(datetime_code);
 
+    errno = 0;
     FILE* file = fopen(file_name, "a");
+    if (!file) {
+        fprintf(stderr, "StreamCap: Error: Couldn't open file: %s\n", strerror(errno));
+        exit(1);
+    }
+
+    printf ("(Re)starting\n");
+
+    prog.filename = file_name;
+    if (highwatermark) {
+        prog.highwatermark = strtoll(highwatermark, &tmp_parse, 10);
+        if (tmp_parse && strlen(tmp_parse) > 0) {
+            switch (tmp_parse[0]) {
+                case 'k' :
+                case 'K' :  prog.highwatermark *= 1024;
+                            break;
+                case 'm' :
+                case 'M' :  prog.highwatermark *= 1024 * 1024;
+                            break;
+                case 'g' :
+                case 'G' :  prog.highwatermark *= 1024 * 1024 * 1024;
+                            break;
+                default  :
+                    fprintf(stderr, "Error: what the unit \"%s\" mean? - Understood are 'k', 'M' and 'G'\n", tmp_parse);
+                    exit(1);
+            }
+        }
+    } else {
+        prog.highwatermark = 0;
+    }
+
 
     curl_easy_setopt(easyhandle, CURLOPT_URL, url);
 
@@ -86,6 +170,10 @@ void get_page(const char* url, const char* name, const char* extention, const ch
     curl_easy_perform(easyhandle);
 
     curl_easy_cleanup(easyhandle);
+
+    free(file_name);
+
+    return;
 }
 
 
@@ -140,7 +228,7 @@ int main(int argc, char *argv[])
     }
 
     if (!url) {
-        fprintf(stderr, "%s: Error: No URL supplied\n", argv[0]);
+        fprintf(stderr, "StreamCap: Error: No URL supplied\n");
         usage();
         return 1;
     }
