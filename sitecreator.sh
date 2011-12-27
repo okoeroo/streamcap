@@ -24,9 +24,15 @@ function build_dumps() {
     cd "${ABS_VIDEO_DIR}"
     BODY_DUMP_ROWS=$(find . -name \*\.ogv -type f | while read OGV_FILE; do
         BODY_DUMP_ROW="<tr>"
+
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<td>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}<a href=\"${REL_VIDEO_DIR}/$OGV_FILE\">$OGV_FILE</a>"
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</td>"
+
+        BODY_DUMP_ROW="${BODY_DUMP_ROW}<td>"
+        BODY_DUMP_ROW="${BODY_DUMP_ROW}`ls  --size \"${ABS_VIDEO_DIR}/${OGV_FILE}\" | cut -d\" \" -f1`"
+        BODY_DUMP_ROW="${BODY_DUMP_ROW}</td>"
+
         BODY_DUMP_ROW="${BODY_DUMP_ROW}</tr>"
 
         echo "${BODY_DUMP_ROW}"
