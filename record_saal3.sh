@@ -13,11 +13,6 @@ WATERMARK="400M"
 
 
 function streamcapture() {
-    URL="$1"
-    NAME="$1"
-    EXT="$2"
-    WATERMARK="$3"
-
     while [ true ]; do
         rand_num=$RANDOM
         count=0
