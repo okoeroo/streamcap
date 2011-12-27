@@ -28,6 +28,6 @@ cd "${ABS_VIDEO_DIR}"
 #streamcapture "http://194.171.96.102:8000/room2" "room1" "ogv" "100" &
 
 # saal 1
-streamcapture "http://http.28c3.fem-net.de/live/saal1_hq-2011.12.27-11_54_26.ts" "saal1" "ogv" "400M"
+streamcapture "http://datatomb.de:8080" "saal1" "mms" "400M"
 
 

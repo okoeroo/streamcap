@@ -50,6 +50,7 @@ function build_body() {
     BODY_TOP="${BODY_TOP}<center>Do NOT expect any quality at all, it's a best effort thingy.</center><br>"
 
     BODY_TAIL="<br><center>Last update: `date`.<br>For comments, tweet me up: <a href=\"https://twitter.com/#!/okoeroo\">@okoeroo</a></center>"
+    BODY_TAIL="${BODY_TAIL}<br><center>`df -hP | grep ccc`</center>"
 
     BODY_CONTENT=${BODY_TOP}${BODY_DUMP}${BODY_TAIL}
 
